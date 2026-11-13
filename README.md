@@ -13,7 +13,7 @@ Students book when they're ready. Interviewers record the result. The GRIT team 
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-175_passing-16A34A?style=flat-square)
 
-[Quick start](#quick-start) · [Features](#what-it-does) · [How it works](#how-it-works) · [Architecture](#architecture) · [Deployment](#deployment) · [Design write-up](docs/WRITEUP.md)
+[Quick start](#quick-start) · [Features](#what-it-does) · [How it works](#how-it-works) · [Architecture](#architecture) · [Deployment](#deployment) · [2-page write-up (PDF)](frontend/public/downloads/GRIT-Interviews-Writeup.pdf) · [Full design notes](docs/WRITEUP.md)
 
 <img src="docs/images/home.png" alt="GRIT Interviews home page" width="100%">
 
@@ -116,7 +116,7 @@ Each student gets **3 attempts** per badge. A retake, or anything that wasn't th
 | A student is marked absent unfairly | They dispute within 48 hours; the team sees both sides before deciding |
 | Cheating is found after a pass | The badge is revoked and the student sees the reason |
 
-The full reasoning is in the **[design write-up](docs/WRITEUP.md)**: states, edge cases, data model and the three key student messages.
+The short version is the **2-page write-up** ([PDF](frontend/public/downloads/GRIT-Interviews-Writeup.pdf), [Word](frontend/public/downloads/GRIT-Interviews-Writeup.docx), [Markdown](docs/writeup/writeup.md)), also readable on the site at `/writeup`. The longer reasoning is in the **[design notes](docs/WRITEUP.md)**: states, edge cases, data model and the three key student messages.
 
 ## Architecture
 
@@ -274,6 +274,7 @@ frontend/
     api/        typed API hooks per role
 docs/           design write-up and README images
 tools/video/    scripts that record and voice the demo videos
+tools/writeup/  builds the 2-page write-up (PDF, Word, Markdown, text) from docs/writeup/writeup.md
 deploy/         production Compose file and server deploy script
 .github/        CI and deploy workflow
 start.*         one-command start scripts

@@ -58,3 +58,52 @@
     animation: none;
   }
 }
+
+/* The write-up page renders HTML built from docs/writeup/writeup.md. */
+@layer components {
+  .writeup-doc {
+    @apply text-[16px] leading-relaxed text-ink-800;
+  }
+  .writeup-doc h1 {
+    @apply font-head text-[28px] font-extrabold leading-tight text-ink-950;
+  }
+  .writeup-doc h2 {
+    @apply mb-3 mt-10 font-head text-[22px] font-extrabold text-brand-700;
+  }
+  .writeup-doc p {
+    @apply mb-3;
+  }
+  .writeup-doc p.byline {
+    @apply mt-1 border-b border-ink-200 pb-4 text-[14px] text-ink-500;
+  }
+  .writeup-doc p.byline + p {
+    @apply mt-5;
+  }
+  .writeup-doc p.label {
+    @apply mb-1.5 mt-5 font-semibold text-ink-950;
+  }
+  .writeup-doc a {
+    @apply break-words text-brand-700 underline-offset-2 hover:underline;
+  }
+  .writeup-doc ul {
+    @apply mb-3 list-disc space-y-1.5 pl-5 marker:text-ink-400;
+  }
+  .writeup-doc strong {
+    @apply font-semibold text-ink-950;
+  }
+  .writeup-doc .table-wrap {
+    @apply my-4 overflow-x-auto rounded-xl ring-1 ring-ink-200;
+  }
+  .writeup-doc table {
+    @apply w-full min-w-[640px] border-collapse text-[14px] leading-snug;
+  }
+  .writeup-doc th {
+    @apply bg-brand-50 px-3 py-2 text-left font-semibold text-brand-800;
+  }
+  .writeup-doc td {
+    @apply border-t border-ink-200 px-3 py-2 align-top;
+  }
+  .writeup-doc td:first-child {
+    @apply whitespace-nowrap font-semibold text-ink-950;
+  }
+}

@@ -16,6 +16,7 @@ import InterviewerHistory from "./pages/interviewer/History";
 import InterviewerSchedule from "./pages/interviewer/Schedule";
 import Landing from "./pages/landing/Landing";
 import Showcase from "./pages/Showcase";
+import Writeup from "./pages/Writeup";
 import BookingStatus from "./pages/team/BookingStatus";
 import StudentBadges from "./pages/student/Badges";
 import StudentBook from "./pages/student/Book";
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/showcase" element={<Showcase />} />
+      <Route path="/writeup" element={<Writeup />} />
 
       <Route element={<RequireRole role="student" />}>
         <Route element={<AppShell />}>
