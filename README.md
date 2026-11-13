@@ -11,9 +11,9 @@ Students book when they're ready. Interviewers record the result. The GRIT team 
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-154_passing-16A34A?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-170_passing-16A34A?style=flat-square)
 
-[Quick start](#quick-start) · [Features](#what-it-does) · [How it works](#how-it-works) · [Architecture](#architecture) · [Design write-up](docs/WRITEUP.md)
+[Quick start](#quick-start) · [Features](#what-it-does) · [How it works](#how-it-works) · [Architecture](#architecture) · [Deployment](#deployment) · [Design write-up](docs/WRITEUP.md)
 
 <img src="docs/images/home.png" alt="GRIT Interviews home page" width="100%">
 
@@ -208,12 +208,43 @@ The tooling that records and voices them is in [`tools/video`](tools/video/READM
 ./start.sh --test        # or .\start.ps1 -Test on Windows
 ```
 
-154 tests run against a real Postgres database. They cover:
+170 tests run against a real Postgres database. They cover:
 - every allowed and refused state transition, plus eligibility and cooldowns;
 - booking rules and concurrent booking races;
 - interview-day timing, attendance, disputes and reminders;
 - emergency changes, interviewer moves and cancels;
 - auth and role guards.
+
+## Deployment
+
+Every push to `main` runs [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml):
+
+```mermaid
+flowchart LR
+    A["Push to main"] --> B["Backend tests<br/>+ frontend build"]
+    B --> C["Build images<br/>amd64 + arm64"]
+    C --> D["Push to GHCR"]
+    D --> E["SSH to server<br/>pull and restart"]
+    E --> F["Check the live URL"]
+```
+
+Pull requests run the tests and the build only.
+
+On the server, [`deploy/remote.sh`](deploy/remote.sh):
+- installs Docker if it's missing and opens ports 80 and 443;
+- creates the database password and JWT secret once, in `~/grit-interviews/.env`, where they never leave the server;
+- starts Postgres, the API and [Caddy](https://caddyserver.com), which serves the app and forwards `/api` to the API.
+
+**One-time setup** (repository *Settings > Secrets and variables > Actions*):
+
+| Name | Kind | Value |
+|---|---|---|
+| `SSH_PRIVATE_KEY` | Secret | Private key for the server's SSH user |
+| `DEPLOY_HOST` | Variable | Server IP or hostname |
+| `DEPLOY_USER` | Variable | SSH user (default `ubuntu`) |
+| `DEPLOY_DOMAIN` | Variable, optional | A domain pointing at the server; Caddy then serves it over HTTPS |
+
+On Oracle Cloud, also add ingress rules for TCP 80 and 443 to the instance's subnet security list.
 
 ## Logging
 
@@ -234,7 +265,7 @@ backend/
     core/       settings, auth, time helpers, logging
     seed.py     demo data covering every journey state
   alembic/      database migrations
-  tests/        154 tests against real Postgres
+  tests/        170 tests against real Postgres
 frontend/
   src/
     pages/      student, interviewer, team, sign-in and home page
@@ -243,6 +274,8 @@ frontend/
     api/        typed API hooks per role
 docs/           design write-up and README images
 tools/video/    scripts that record and voice the demo videos
+deploy/         production Compose file and server deploy script
+.github/        CI and deploy workflow
 start.*         one-command start scripts
 ```
 

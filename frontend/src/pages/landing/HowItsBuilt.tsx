@@ -47,7 +47,7 @@ export function HowItsBuilt() {
         {[
           ["No double bookings", "Tested with five students booking the same slot at the same moment."],
           ["Every change is logged", "Who changed what, when and why, for every journey."],
-          ["154 automated tests", "Covering every rule described on this page."],
+          ["170 automated tests", "Covering every rule described on this page."],
         ].map(([title, body]) => (
           <li key={title} className="flex gap-3 rounded-2xl bg-white p-5 ring-1 ring-ink-200/70">
             <Check className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" strokeWidth={2.5} />

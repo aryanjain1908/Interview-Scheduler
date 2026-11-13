@@ -370,7 +370,7 @@ function BookedPanel({
       )}
       {item.pending_change && <PendingChangeNote change={item.pending_change} />}
       <p className="text-xs text-ink-500">
-        {changeHint({ moved, canReschedule, canCancel, canEmergency, left: item.reschedules_left })}{" "}
+        {changeHint({ moved, canReschedule, canCancel, canEmergency, left: item.reschedules_left, live, locked: interview.student_actions.emergency_change.reason })}{" "}
         {interactive && (
           <Link to={`/student/interviews/${interview.id}`} className="whitespace-nowrap font-semibold text-brand-700 hover:underline">
             View details
@@ -450,12 +450,22 @@ function BookedPanel({
   );
 }
 
-function changeHint(o: { moved: boolean; canReschedule: boolean; canCancel: boolean; canEmergency: boolean; left: number }) {
+function changeHint(o: {
+  moved: boolean;
+  canReschedule: boolean;
+  canCancel: boolean;
+  canEmergency: boolean;
+  left: number;
+  live: boolean;
+  locked?: string | null;
+}) {
   if (o.moved && o.canReschedule) return "Join 5 minutes early. Changes are free until the interview starts.";
   if (o.canReschedule) return `Join 5 minutes early. You can reschedule (${o.left} left) or cancel up to 12 hours before.`;
   if (o.canCancel) return "Join 5 minutes early. You've used your reschedules; you can still cancel up to 12 hours before.";
   if (o.canEmergency)
     return "Join 5 minutes early. Normal changes are closed — for a real emergency, use Emergency change (the GRIT team reviews it).";
+  // Nothing can be changed any more: say why instead of leaving the student guessing.
+  if (!o.live && o.locked) return `Join 5 minutes early. ${o.locked}`;
   return "Join 5 minutes early.";
 }
 

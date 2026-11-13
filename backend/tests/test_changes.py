@@ -268,3 +268,94 @@ def test_blocking_the_old_slot_after_a_student_moved_leaves_the_new_booking(db, 
     cancelled = booking.cancel_by_interviewer(db, interview=iv, actor_id=interviewer.id, reason=MOVE, now=NOW, slot_id=old_slot.id)
     assert cancelled is False
     assert iv.status == InterviewStatus.SCHEDULED and iv.slot_id == new_slot.id
+
+
+def test_change_must_move_to_a_different_time(db, world):
+    """Same time with another interviewer isn't a change: it would only use one up."""
+    iv = world["iv"]
+    other = world["make"].user(Role.INTERVIEWER)
+    same_time = world["make"].slot(other, iv.start_at)
+    with pytest.raises(RuleViolation, match="already at"):
+        booking.reschedule(db, student=world["student"], interview_id=iv.id, new_slot_id=same_time.id, now=NOW)
+    with pytest.raises(RuleViolation, match="already at"):
+        _emergency(db, world, _late(iv), slot=same_time)
+    assert same_time.status == SlotStatus.OPEN
+    assert iv.journey.reschedules_used == 0
+
+
+def test_card_explains_why_nothing_can_be_changed(db, world):
+    iv = world["iv"]
+    later = world["make"].slot(world["interviewer"], iv.start_at + timedelta(hours=1))
+    _emergency(db, world, _late(iv), slot=later)
+    change_requests.approve(db, admin=world["lead"], request_id=iv.journey.change_requests[0].id, note="", now=_late(iv))
+    from app.services import interview_rules as rules
+    actions = rules.student_actions(iv, _late(iv, hours=1))
+    assert not any(actions[k]["allowed"] for k in ("reschedule", "cancel", "emergency_change"))
+    assert "contact the GRIT team" in actions["emergency_change"]["reason"]
+
+
+def _rebook(db, w, start, now):
+    slot = w["make"].slot(w["interviewer"], start)
+    return booking.book(db, student=w["student"], badge_id=w["badge"].id, slot_id=slot.id, now=now)
+
+
+def test_rebooking_after_an_interviewer_cancel_gets_a_fresh_emergency_change(db, world):
+    iv = world["iv"]
+    moved_to = world["make"].slot(world["interviewer"], iv.start_at + timedelta(hours=1))
+    request = _emergency(db, world, _late(iv), slot=moved_to)
+    change_requests.approve(db, admin=world["lead"], request_id=request.id, note="", now=_late(iv))
+    interviews.cancel(db, interviewer=world["interviewer"], interview_id=iv.id, reason=MOVE, now=_late(iv))
+
+    again = _rebook(db, world, iv.start_at + timedelta(hours=2), now=_late(iv))
+    assert again.attempt_no == iv.attempt_no  # the interviewer's cancel cost no attempt
+    later = world["make"].slot(world["interviewer"], again.start_at + timedelta(hours=1))
+    world["iv"] = again
+    _emergency(db, world, _late(again), slot=later)  # allowed again
+    assert again.start_at == later.start_at
+
+
+def test_interviewer_cancel_settles_a_pending_emergency_change(db, world):
+    iv = world["iv"]
+    moved_to = world["make"].slot(world["interviewer"], iv.start_at + timedelta(hours=1))
+    request = _emergency(db, world, _late(iv), slot=moved_to)
+    interviews.cancel(db, interviewer=world["interviewer"], interview_id=iv.id, reason=MOVE, now=_late(iv))
+    assert request.status == ChangeRequestStatus.APPROVED
+    assert "interviewer cancelled" in request.resolution_note
+    assert iv.journey.attempts_used == 0
+    assert "emergency_settled" in _kinds(db, world["student"].id)
+    with pytest.raises(RuleViolation, match="already been reviewed"):
+        change_requests.reject(db, admin=world["lead"], request_id=request.id, note="Too late to reject this", now=_late(iv))
+
+
+def test_absent_interviewer_settles_a_pending_emergency_change(db, world):
+    from app.services import attendance
+
+    iv = world["iv"]
+    moved_to = world["make"].slot(world["interviewer"], iv.start_at + timedelta(hours=1))
+    request = _emergency(db, world, _late(iv), slot=moved_to)
+    attendance.report_interviewer_absent(db, student=world["student"], interview_id=iv.id, now=iv.start_at + timedelta(minutes=16))
+    assert request.status == ChangeRequestStatus.APPROVED
+    assert iv.journey.attempts_used == 0
+
+
+def test_student_cancelling_themselves_does_not_reset_the_emergency_change(db, world):
+    iv = world["iv"]
+    request = _emergency(db, world, _late(iv))  # emergency cancellation
+    change_requests.approve(db, admin=world["lead"], request_id=request.id, note="", now=_late(iv))
+    again = _rebook(db, world, iv.start_at + timedelta(hours=2), now=_late(iv))
+    world["iv"] = again
+    with pytest.raises(RuleViolation, match="already made an emergency change"):
+        _emergency(db, world, _late(again))
+
+
+def test_rejecting_after_the_attempt_was_already_counted_does_not_count_it_twice(db, world):
+    iv = world["iv"]
+    moved_to = world["make"].slot(world["interviewer"], iv.start_at + timedelta(hours=1))
+    request = _emergency(db, world, _late(iv), slot=moved_to)
+    interviews.mark_no_show(
+        db, interviewer=world["interviewer"], interview_id=iv.id,
+        note="Waited 15 minutes in the room; the student never joined.", now=iv.start_at + timedelta(minutes=16),
+    )
+    assert iv.journey.attempts_used == 1
+    change_requests.reject(db, admin=world["lead"], request_id=request.id, note="No evidence was provided.", now=iv.end_at)
+    assert iv.journey.attempts_used == 1

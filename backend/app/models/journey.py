@@ -44,6 +44,11 @@ class InterviewJourney(Base):
         viewonly=True, order_by="ChangeRequest.created_at", lazy="selectin"
     )
 
+    # Every booking made on this journey, oldest first.
+    interviews: Mapped[List["Interview"]] = relationship(  # noqa: F821
+        viewonly=True, order_by="Interview.booked_at"
+    )
+
     @property
     def attempts_left(self) -> int:
         return max(self.badge.max_attempts - self.attempts_used, 0)

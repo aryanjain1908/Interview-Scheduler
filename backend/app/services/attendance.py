@@ -22,6 +22,7 @@ from app.core.errors import NotFound, RuleViolation
 from app.models import DisputeResolution, Interview, InterviewStatus, JourneyStatus as S, Slot, User
 from app.services import interview_rules as rules
 from app.services import messages
+from app.services.change_settle import settle_pending
 from app.services.locks import lock_interview, lock_journey
 from app.services.notifications import notify, notify_team_leads
 from app.services.state_machine import transition
@@ -41,6 +42,7 @@ def report_interviewer_absent(db: Session, *, student: User, interview_id: uuid.
         actor_id=student.id,
         now=now,
     )
+    settle_pending(db, interview.journey, why="your interviewer didn't join the interview", now=now)
     notify(db, student.id, messages.interviewer_absent_ack(interview.badge.name), at=now)
     notify(db, interview.interviewer_id, messages.interviewer_marked_absent(student.name, interview.start_at), at=now)
     db.flush()

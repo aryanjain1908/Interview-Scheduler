@@ -203,6 +203,16 @@ def emergency_approved(badge: str) -> Message:
     )
 
 
+def emergency_settled(badge: str, why: str) -> Message:
+    return Message(
+        "emergency_settled",
+        "Your emergency change is settled",
+        f"Your emergency change to the {badge} badge interview no longer needs review because {why}. "
+        "It doesn't use an attempt, and your next booking gets its own emergency change if you need one.",
+        "success",
+    )
+
+
 def emergency_rejected(badge: str, note: str, attempts_used: int, max_attempts: int, cancelled: bool) -> Message:
     tail = (
         " That was your last attempt for this season, so your upcoming booking has been cancelled."

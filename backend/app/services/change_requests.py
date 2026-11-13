@@ -31,7 +31,7 @@ from app.models import (
 )
 from app.services import interview_rules as rules
 from app.services import messages
-from app.services.booking import flush_or_conflict, lock_open_slot, move_interview, student_interview
+from app.services.booking import ensure_new_time, flush_or_conflict, lock_open_slot, move_interview, student_interview
 from app.services.locks import lock_journey
 from app.services.notifications import notify, notify_team_leads
 from app.services.state_machine import transition
@@ -65,6 +65,7 @@ def emergency_change(
     )
     if new_slot_id is not None:
         new_slot = lock_open_slot(db, new_slot_id, interview.badge_id, now)
+        ensure_new_time(interview, new_slot)
         move_interview(interview, new_slot, release_old=SlotStatus.OPEN)
         request.to_start_at = new_slot.start_at
         transition(
@@ -119,7 +120,10 @@ def reject(db: Session, *, admin: User, request_id: uuid.UUID, note: str, now: d
     _resolve(request, admin, note, now)
 
     journey = lock_journey(db, request.journey_id)
-    journey.attempts_used = min(journey.attempts_used + 1, journey.badge.max_attempts)
+    # If that attempt was already counted (the interview went ahead, or the student
+    # didn't show), rejecting the change mustn't count it a second time.
+    if journey.attempts_used < request.attempt_no:
+        journey.attempts_used = min(journey.attempts_used + 1, journey.badge.max_attempts)
     live = db.scalar(
         select(Interview).where(Interview.journey_id == journey.id, Interview.status.in_(ACTIVE_INTERVIEW_STATUSES))
     )

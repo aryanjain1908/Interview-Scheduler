@@ -191,9 +191,32 @@ def can_request_emergency(iv: Interview, now: datetime) -> Action:
     requests = iv.journey.change_requests
     if any(r.status == ChangeRequestStatus.PENDING for r in requests):
         return Action(False, "Your last emergency change is still being reviewed by the GRIT team.")
-    if any(r.attempt_no == iv.attempt_no for r in requests):
-        return Action(False, "You've already made an emergency change for this attempt. Please contact the GRIT team.")
+    if emergency_used(iv):
+        return Action(
+            False,
+            "You've already made an emergency change for this attempt, and normal changes close "
+            f"{settings.change_cutoff_hours} hours before. If you can't attend, contact the GRIT team.",
+        )
     return OK
+
+
+# The interviewer let the student down: the booking that follows is a fresh start.
+INTERVIEWER_FAULT = (S.CANCELLED_INTERVIEWER, S.INTERVIEWER_ABSENT)
+
+
+def emergency_used(iv: Interview) -> bool:
+    """One emergency change per attempt, but not counting changes made before the
+    interviewer cancelled or didn't turn up: that failure wasn't the student's, so
+    the rebooked interview gets its own emergency change."""
+    resets = [
+        i.cancelled_at
+        for i in iv.journey.interviews
+        if i.status in INTERVIEWER_FAULT and i.attempt_no == iv.attempt_no and i.cancelled_at is not None
+    ]
+    since = max(resets, default=None)
+    return any(
+        r.attempt_no == iv.attempt_no and (since is None or r.created_at > since) for r in iv.journey.change_requests
+    )
 
 
 def can_interviewer_reschedule(iv: Interview, now: datetime) -> Action:
