@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-canvas font-sans text-ink-900;
+  }
+  ::selection {
+    @apply bg-brand-200 text-ink-950;
+  }
+}
+
+@layer components {
+  .table-base {
+    @apply w-full text-left text-sm;
+  }
+  .table-base th {
+    @apply whitespace-nowrap border-b border-ink-200 bg-ink-100/50 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-ink-500;
+  }
+  .table-base td {
+    @apply border-b border-ink-100 px-4 py-3 align-middle;
+  }
+  .table-base tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .striped-blocked {
+    background-image: repeating-linear-gradient(135deg, transparent 0 6px, rgba(16, 23, 58, 0.06) 6px 12px);
+  }
+}
+
+/* One select style everywhere: no native arrow (it ate into the text space and looks
+   different per browser); our chevron sits inside the pr-8 padding instead. */
+@layer components {
+  .select-chevron {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7194'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 1rem 1rem;
+  }
+}
+
+@keyframes jf-dash {
+  to {
+    stroke-dashoffset: -26;
+  }
+}
+.jf-dash {
+  animation: jf-dash 1.4s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .jf-dash {
+    animation: none;
+  }
+}
