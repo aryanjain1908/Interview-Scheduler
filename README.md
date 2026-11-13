@@ -13,7 +13,7 @@ Students book when they're ready. Interviewers record the result. The GRIT team 
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-175_passing-16A34A?style=flat-square)
 
-[Quick start](#quick-start) · [Features](#what-it-does) · [How it works](#how-it-works) · [Architecture](#architecture) · [Deployment](#deployment) · [2-page write-up (PDF)](frontend/public/downloads/GRIT-Interviews-Writeup.pdf) · [Full design notes](docs/WRITEUP.md)
+[Live demo](http://130.210.56.15) · [Clickable prototype](http://130.210.56.15/prototype) · [Quick start](#quick-start) · [Features](#what-it-does) · [How it works](#how-it-works) · [Architecture](#architecture) · [Deployment](#deployment) · [2-page write-up (PDF)](frontend/public/downloads/GRIT-Interviews-Writeup.pdf) · [Full design notes](docs/WRITEUP.md)
 
 <img src="docs/images/home.png" alt="GRIT Interviews home page" width="100%">
 
