@@ -7,7 +7,7 @@ The three headline messages from the write-up are `booking_confirmed`,
 from dataclasses import dataclass
 from datetime import date, datetime
 
-from app.core.clock import fmt_date, fmt_datetime
+from app.core.clock import day_word, fmt_date, fmt_datetime, fmt_time, fmt_until
 from app.core.config import settings
 
 
@@ -352,27 +352,44 @@ def no_show_excused(badge: str) -> Message:
     )
 
 
-def reminder_day_before(badge: str, start_at: datetime, interviewer: str) -> Message:
+def reminder_day_before(badge: str, start_at: datetime, interviewer: str, now: datetime) -> Message:
     return Message(
         "reminder_day_before",
-        "Your interview is tomorrow",
+        f"Your interview is {day_word(start_at, now)} at {fmt_time(start_at)}",
         f"Your {badge} badge interview is on {fmt_datetime(start_at)} with {interviewer}. Check your camera and "
         "microphone, and join from your dashboard 5 minutes early.",
     )
 
 
-def reminder_hour_before(badge: str, start_at: datetime, interviewer: str) -> Message:
+def reminder_hour_before(badge: str, start_at: datetime, interviewer: str, now: datetime) -> Message:
     return Message(
         "reminder_hour_before",
-        "Your interview starts in 1 hour",
+        f"Your interview starts {fmt_until(start_at, now)}",
         f"Your {badge} badge interview with {interviewer} starts at {fmt_datetime(start_at)}. Find a quiet spot "
         "and join from your dashboard 5 minutes early.",
     )
 
 
-def reminder_hour_before_staff(student: str, badge: str, start_at: datetime) -> Message:
+def reminder_hour_before_staff(student: str, badge: str, start_at: datetime, now: datetime) -> Message:
     return Message(
         "reminder_staff",
-        "Interview in 1 hour",
+        f"Interview {fmt_until(start_at, now)}",
         f"{student} · {badge} badge · {fmt_datetime(start_at)}. The join link is on your schedule.",
     )
+
+
+def booked_staff(student: str, badge: str, start_at: datetime, now: datetime) -> Message:
+    return Message(
+        "booked_staff",
+        f"New interview {fmt_until(start_at, now)}",
+        f"{student} booked the {badge} badge interview for {fmt_datetime(start_at)}. "
+        "The join link is on your schedule.",
+    )
+
+
+def student_moved_staff(student: str, old: datetime, new: "datetime | None", same_interviewer: bool) -> Message:
+    if new is not None and same_interviewer:
+        body = f"{student} moved their interview from {fmt_datetime(old)} to {fmt_datetime(new)}."
+    else:
+        body = f"{student} moved their interview on {fmt_datetime(old)} to another time. The slot is open again."
+    return Message("student_moved_staff", "A student moved their interview", body)

@@ -40,15 +40,15 @@ def send_due(db: Session, now: datetime) -> int:
         if iv.reminded_day_before_at is None and start - now <= DAY:
             iv.reminded_day_before_at = now
             if iv.booked_at <= start - DAY:
-                notify(db, iv.student_id, messages.reminder_day_before(badge, start, who), at=now)
+                notify(db, iv.student_id, messages.reminder_day_before(badge, start, who, now), at=now)
                 sent += 1
         if iv.reminded_hour_before_at is None and start - now <= HOUR:
             iv.reminded_hour_before_at = now
+            # Booked (or moved here) inside the hour: the booking message already said when.
             if iv.booked_at <= start - HOUR:
-                notify(db, iv.student_id, messages.reminder_hour_before(badge, start, who), at=now)
-                sent += 1
-            notify(db, iv.interviewer_id, messages.reminder_hour_before_staff(iv.student.name, badge, start), at=now)
-            sent += 1
+                notify(db, iv.student_id, messages.reminder_hour_before(badge, start, who, now), at=now)
+                notify(db, iv.interviewer_id, messages.reminder_hour_before_staff(iv.student.name, badge, start, now), at=now)
+                sent += 2
     db.flush()
     if sent:
         logger.info("Sent {} interview reminder(s)", sent)

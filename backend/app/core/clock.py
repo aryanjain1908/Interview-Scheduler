@@ -1,5 +1,6 @@
 """Time helpers. Everything is stored in UTC and shown to people in IST."""
 
+import math
 from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -41,6 +42,26 @@ def fmt_datetime(dt: datetime) -> str:
     hour = local.hour % 12 or 12
     meridiem = "AM" if local.hour < 12 else "PM"
     return f"{local:%a}, {local.day} {local:%b} at {hour}:{local.minute:02d} {meridiem} IST"
+
+
+def fmt_until(start: datetime, now: datetime) -> str:
+    """How far away `start` is, for notifications: 'in 15 min', 'in 1 hr 20 min', 'now'."""
+    minutes = math.ceil((start - now).total_seconds() / 60)
+    if minutes < 1:
+        return "now"
+    if minutes < 60:
+        return f"in {minutes} min"
+    hours, rest = divmod(minutes, 60)
+    if hours < 24:
+        return f"in {hours} hr" + (f" {rest} min" if rest else "")
+    days = (local_today(start) - local_today(now)).days
+    return "tomorrow" if days == 1 else f"in {days} days"
+
+
+def day_word(start: datetime, now: datetime) -> str:
+    """'today', 'tomorrow' or the date, in IST."""
+    days = (local_today(start) - local_today(now)).days
+    return {0: "today", 1: "tomorrow"}.get(days, f"on {fmt_date(start)}")
 
 
 def fmt_time(dt: datetime) -> str:
