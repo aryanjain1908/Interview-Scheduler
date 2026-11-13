@@ -8,7 +8,7 @@ all genuine.
 
 import sys
 from datetime import date, datetime, time, timedelta
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -119,9 +119,9 @@ INTERNAL_NOTES = {
 
 
 class Seeder:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, now: Optional[datetime] = None):
         self.db = db
-        self.now = utcnow()
+        self.now = now or utcnow()
         self.today = local_today(self.now)
         self.users: Dict[str, User] = {}
         self.badges: Dict[str, Badge] = {}
@@ -307,7 +307,7 @@ class Seeder:
         base = now.replace(minute=0 if now.minute < 30 else 30, second=0, microsecond=0)
         # Emergency inside the 12h window: moved to a new time, waiting for the team's review.
         self.clear_skills("ishita", "frontend", now - timedelta(days=5))
-        iv = self.book("ishita", "frontend", P, self._within_change_cutoff(base), booked_at=now - timedelta(days=3))
+        iv = self.book("ishita", "frontend", P, self._within_change_cutoff(base, P), booked_at=now - timedelta(days=3))
         change_requests.emergency_change(
             self.db, student=self.users["ishita"], interview_id=iv.id,
             reason="My father was admitted to hospital this morning and I have to be with him today.",
@@ -322,16 +322,21 @@ class Seeder:
             now=now - timedelta(hours=1),
         )
 
-    def _within_change_cutoff(self, base: datetime) -> datetime:
-        """A daytime slot that's 1–12h away, so only an emergency change is possible."""
-        tomorrow_nine = self.at(1, 9)
-        today_nine = self.at(0, 9)
-        candidates = [base + timedelta(hours=h) for h in (3, 2, 4, 1)] + [today_nine, tomorrow_nine]
-        for start in candidates:
-            ahead = start - self.now
-            if timedelta(hours=1) <= ahead < timedelta(hours=settings.change_cutoff_hours) and 8 <= to_local(start).hour < 21:
+    def _within_change_cutoff(self, base: datetime, interviewer: str) -> datetime:
+        """A free slot 1–12h away, so only an emergency change is possible; daytime if there is one."""
+        cutoff = timedelta(hours=settings.change_cutoff_hours)
+        preferred = [base + timedelta(hours=h) for h in (3, 2, 4, 1)] + [self.at(0, 9), self.at(1, 9)]
+        every_half_hour = [base + timedelta(minutes=30 * i) for i in range(2, 2 * settings.change_cutoff_hours)]
+        daytime = lambda start: 8 <= to_local(start).hour < 21  # noqa: E731
+        for start in [s for s in preferred if daytime(s)] + every_half_hour:
+            if timedelta(hours=1) <= start - self.now < cutoff and self._free(interviewer, start):
                 return start
-        return base + timedelta(hours=3)
+        raise RuntimeError("No free slot inside the change window for the emergency-change demo.")
+
+    def _free(self, interviewer: str, start: datetime) -> bool:
+        owner = self.users[interviewer]
+        slot = self.db.scalar(select(Slot).where(Slot.interviewer_id == owner.id, Slot.start_at == start))
+        return slot is None or slot.status == SlotStatus.OPEN
 
     def _journey(self, student: str, badge: str) -> InterviewJourney:
         return self.db.scalar(
