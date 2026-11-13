@@ -1,0 +1,1 @@
+CREATE DATABASE grit_test;
