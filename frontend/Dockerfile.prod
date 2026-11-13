@@ -1,0 +1,14 @@
+# Production image: build the app once, serve the static files with Caddy.
+# The build stage runs on the builder's own platform; its output is plain files,
+# so multi-arch images (amd64 + arm64) don't need to emulate Node.
+FROM --platform=$BUILDPLATFORM node:20-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY . .
+RUN npm run build
+
+FROM caddy:2.8-alpine
+COPY Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /app/dist /srv
+EXPOSE 80 443
