@@ -11,7 +11,7 @@ Students book when they're ready. Interviewers record the result. The GRIT team 
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-170_passing-16A34A?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-175_passing-16A34A?style=flat-square)
 
 [Quick start](#quick-start) · [Features](#what-it-does) · [How it works](#how-it-works) · [Architecture](#architecture) · [Deployment](#deployment) · [Design write-up](docs/WRITEUP.md)
 
@@ -208,7 +208,7 @@ The tooling that records and voices them is in [`tools/video`](tools/video/READM
 ./start.sh --test        # or .\start.ps1 -Test on Windows
 ```
 
-170 tests run against a real Postgres database. They cover:
+175 tests run against a real Postgres database. They cover:
 - every allowed and refused state transition, plus eligibility and cooldowns;
 - booking rules and concurrent booking races;
 - interview-day timing, attendance, disputes and reminders;
@@ -265,7 +265,7 @@ backend/
     core/       settings, auth, time helpers, logging
     seed.py     demo data covering every journey state
   alembic/      database migrations
-  tests/        170 tests against real Postgres
+  tests/        175 tests against real Postgres
 frontend/
   src/
     pages/      student, interviewer, team, sign-in and home page

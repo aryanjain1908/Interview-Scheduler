@@ -84,6 +84,7 @@ def book(db: Session, *, student: User, badge_id: uuid.UUID, slot_id: uuid.UUID,
     journey.priority_rebook = False
     transition(journey, S.BOOKED, at=now, actor_id=student.id, reason=f"Booked {fmt_datetime(slot.start_at)}")
     notify(db, student.id, messages.booking_confirmed(badge.name, slot.start_at, slot.interviewer.name), at=now)
+    notify(db, slot.interviewer_id, messages.booked_staff(student.name, badge.name, slot.start_at, now), at=now)
     flush_or_conflict(db)
     logger.info("Booked interview {} for student {} on badge {} at {}", interview.id, student.id, badge.id, slot.start_at)
     return interview
@@ -98,7 +99,7 @@ def reschedule(db: Session, *, student: User, interview_id: uuid.UUID, new_slot_
 
     new_slot = lock_open_slot(db, new_slot_id, interview.badge_id, now)
     ensure_new_time(interview, new_slot)
-    old_start = interview.slot.start_at
+    old_start, old_interviewer_id = interview.slot.start_at, interview.interviewer_id
     move_interview(interview, new_slot, release_old=SlotStatus.OPEN)
     if not free:
         journey.reschedules_used += 1
@@ -110,6 +111,10 @@ def reschedule(db: Session, *, student: User, interview_id: uuid.UUID, new_slot_
         reason=f"Rescheduled from {fmt_datetime(old_start)} to {fmt_datetime(new_slot.start_at)}",
     )
     notify(db, student.id, messages.rescheduled(interview.badge.name, new_slot.start_at, new_slot.interviewer.name), at=now)
+    same = old_interviewer_id == new_slot.interviewer_id
+    notify(db, old_interviewer_id, messages.student_moved_staff(student.name, old_start, new_slot.start_at, same), at=now)
+    if not same:
+        notify(db, new_slot.interviewer_id, messages.booked_staff(student.name, interview.badge.name, new_slot.start_at, now), at=now)
     flush_or_conflict(db)
     logger.info("Student {} rescheduled interview {} to {}", student.id, interview.id, new_slot.start_at)
     return interview

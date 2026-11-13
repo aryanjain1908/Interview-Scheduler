@@ -82,7 +82,7 @@ export default function Landing() {
               </a>
             </div>
             <p className="mt-8 text-[14px] text-ink-500">
-              React · FastAPI · PostgreSQL · 170 automated tests
+              React · FastAPI · PostgreSQL · 175 automated tests
             </p>
           </div>
 

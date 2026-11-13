@@ -134,3 +134,36 @@ def test_reschedule_resets_reminders(db, make, booked):
     new_slot = make.slot(interviewer, NOW + timedelta(days=5))
     booking.reschedule(db, student=student, interview_id=interview.id, new_slot_id=new_slot.id, now=NOW)
     assert interview.reminded_day_before_at is None
+
+
+def _titles(db, user_id, kind):
+    return [n.title for n in db.query(Notification).filter_by(user_id=user_id, kind=kind)]
+
+
+def test_reminders_say_how_long_is_really_left(db, booked):
+    student, interviewer, interview = booked
+    start = interview.start_at
+    reminders.send_due(db, start - timedelta(minutes=50))
+    assert _titles(db, interviewer.id, "reminder_staff") == ["Interview in 50 min"]
+    assert _titles(db, student.id, "reminder_hour_before") == ["Your interview starts in 50 min"]
+
+
+def test_short_notice_booking_tells_the_interviewer_the_real_time(db, make):
+    """Booked 15 minutes before: no 'in 1 hour' reminder, the interviewer hears 'in 15 min'."""
+    student, interviewer, badge = make.user(), make.user(Role.INTERVIEWER), make.badge()
+    make.clear_all(student, badge)
+    slot = make.slot(interviewer, NOW + timedelta(minutes=15))
+    slot.short_notice = True
+    booking.book(db, student=student, badge_id=badge.id, slot_id=slot.id, now=NOW)
+    assert _titles(db, interviewer.id, "booked_staff") == ["New interview in 15 min"]
+    assert reminders.send_due(db, NOW + timedelta(minutes=1)) == 0
+    assert "reminder_staff" not in _kinds(db, interviewer.id)
+
+
+def test_student_reschedule_tells_both_interviewers(db, make, booked):
+    student, interviewer, interview = booked
+    other = make.user(Role.INTERVIEWER)
+    new_slot = make.slot(other, interview.start_at + timedelta(days=1))
+    booking.reschedule(db, student=student, interview_id=interview.id, new_slot_id=new_slot.id, now=NOW)
+    assert "student_moved_staff" in _kinds(db, interviewer.id)
+    assert "booked_staff" in _kinds(db, other.id)

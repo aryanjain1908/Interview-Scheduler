@@ -68,6 +68,7 @@ def emergency_change(
         ensure_new_time(interview, new_slot)
         move_interview(interview, new_slot, release_old=SlotStatus.OPEN)
         request.to_start_at = new_slot.start_at
+        notify(db, new_slot.interviewer_id, messages.booked_staff(student.name, interview.badge.name, new_slot.start_at, now), at=now)
         transition(
             journey,
             S.BOOKED,
