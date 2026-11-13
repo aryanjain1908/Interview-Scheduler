@@ -37,12 +37,14 @@ if command -v iptables >/dev/null 2>&1; then
       changed=1
     fi
   done
-  if [ -n "$changed" ]; then
-    if command -v netfilter-persistent >/dev/null 2>&1; then
-      sudo netfilter-persistent save >/dev/null
-    elif [ -d /etc/iptables ]; then
-      sudo sh -c 'iptables-save > /etc/iptables/rules.v4'
-    fi
+  # Saved rules (loaded at boot) are edited in place rather than re-saved,
+  # so Docker's own chains never get persisted.
+  rules=/etc/iptables/rules.v4
+  if [ -n "$changed" ] && [ -f "$rules" ]; then
+    for port in 443 80; do
+      line="-A INPUT -p tcp -m state --state NEW -m tcp --dport $port -j ACCEPT"
+      sudo grep -qF -- "$line" "$rules" || sudo sed -i "/--dport 22 -j ACCEPT/a $line" "$rules"
+    done
   fi
 fi
 if command -v ufw >/dev/null 2>&1 && sudo ufw status | grep -q "Status: active"; then
@@ -60,6 +62,13 @@ if [ ! -f .env ]; then
 else
   echo "kept existing .env"
 fi
+
+# Keep this deploy's (non-secret) settings next to the secrets, so plain
+# "docker compose ps / logs" work on the server too.
+for key in API_IMAGE WEB_IMAGE SITE_ADDRESS PUBLIC_URL; do
+  sed -i "/^$key=/d" .env
+  printf '%s=%s\n' "$key" "${!key}" >> .env
+done
 
 say "Pulling images"
 echo "$REGISTRY_TOKEN" | $DOCKER login ghcr.io -u "$REGISTRY_USER" --password-stdin >/dev/null
