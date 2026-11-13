@@ -8,3 +8,6 @@ dist/
 *.tsbuildinfo
 .DS_Store
 *.log
+
+# Local copy of the write-up PDF (the tracked one is in frontend/public/downloads)
+/GRIT-Interviews-Writeup.pdf

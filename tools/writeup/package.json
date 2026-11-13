@@ -1,0 +1,7 @@
+{
+  "name": "grit-writeup",
+  "private": true,
+  "type": "module",
+  "description": "Builds the 2-page write-up (PDF, Word, Markdown, text) shown on the website",
+  "dependencies": { "playwright-core": "1.47.2" }
+}
