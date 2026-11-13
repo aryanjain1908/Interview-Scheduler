@@ -1,142 +1,257 @@
-# GRIT Interview Scheduling
+<div align="center">
 
-Book, run and record GRIT Track Badge interviews, end to end. Built with React (Vite, TypeScript, Tailwind), FastAPI and Postgres.
+# GRIT Interviews
 
-- **Design write-up** (states, edge cases, data model, messages): [`docs/WRITEUP.md`](docs/WRITEUP.md)
-- **Before/after screens:** http://localhost:5173/showcase once the app is running
+**Book, run and record GRIT Track Badge interviews in one place.**
 
-## Home page and videos
+Students book when they're ready. Interviewers record the result. The GRIT team sees everyone's progress.
 
-http://localhost:5173 opens the product home page. In order, it covers:
-- what the product is, shown with real screens;
-- why it's needed and how it works, in four steps;
-- each role, with its real screen;
-- the student journey (the state machine) and the interview-day timeline;
-- edge cases, architecture and data model;
-- the three key student messages;
-- four narrated demo videos recorded from the real app.
+![React](https://img.shields.io/badge/React_18-20232A?style=flat-square&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-154_passing-16A34A?style=flat-square)
 
-The videos live in `frontend/public/videos/`, and the tooling to re-record them is in [`tools/video/`](tools/video/README.md).
+[Quick start](#quick-start) · [Features](#what-it-does) · [How it works](#how-it-works) · [Architecture](#architecture) · [Design write-up](docs/WRITEUP.md)
 
-## Run it
+<img src="docs/images/home.png" alt="GRIT Interviews home page" width="100%">
 
-You need [Docker Desktop](https://www.docker.com/products/docker-desktop/). Everything else (Python, Node, Postgres) runs inside Docker.
+</div>
 
-**Windows:** double-click `start.bat`, or run `.\start.ps1` in PowerShell.
-**macOS / Linux:** run `./start.sh`.
+---
+
+## The problem
+
+GRIT students who clear every skill for a Track Badge must pass a live interview to earn it. Without a system, that runs on chats and spreadsheets:
+
+- **Students** don't know when or how to book.
+- **Interviewers** track slots, no-shows and results by hand.
+- **The team** can't see who is ready but hasn't booked, and has no clean way to revoke a badge if cheating is found later.
+
+GRIT Interviews gives all three one shared, rule-based system.
+
+## What it does
+
+### For students
+
+Booking unlocks the moment the last skill is cleared. One card per badge shows exactly where the student stands: when the interview is, who it's with, what they can still change, and the result with feedback.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/images/student-dashboard.png" alt="Student dashboard with a booked interview"></td>
+<td width="50%"><img src="docs/images/student-booking.png" alt="Booking a slot from the calendar"></td>
+</tr>
+<tr>
+<td align="center"><sub>Dashboard: one card per badge</sub></td>
+<td align="center"><sub>Booking from a 14-day calendar (IST)</sub></td>
+</tr>
+</table>
+
+- Reschedule twice or cancel up to 12 hours before. Inside 12 hours, make an **emergency change** with a reason for the team to review.
+- Report an interviewer who never joined, or dispute an unfair no-show.
+- Reminders a day before and an hour before.
+
+### For interviewers
+
+<table>
+<tr>
+<td width="50%"><img src="docs/images/interviewer-schedule.png" alt="Interviewer schedule for today"></td>
+<td width="50%"><img src="docs/images/interviewer-calendar.png" alt="Interviewer week calendar"></td>
+</tr>
+<tr>
+<td align="center"><sub>Today's schedule with time-locked actions</sub></td>
+<td align="center"><sub>Week calendar of slots and bookings</sub></td>
+</tr>
+</table>
+
+- Set weekly hours, one-off dates, days off, windows up to midnight, and short-notice slots.
+- Record **pass**, **retake later** or **not cleared**, with a 3-skill rubric and feedback.
+- Reschedule or cancel an interview, always with a reason the student and team see.
+
+### For the interview team
+
+<table>
+<tr>
+<td width="50%"><img src="docs/images/team-booking-status.png" alt="Booking status of eligible students"></td>
+<td width="50%"><img src="docs/images/team-reviews.png" alt="Emergency change review queue"></td>
+</tr>
+<tr>
+<td align="center"><sub>Who's booked, who isn't, and reminders</sub></td>
+<td align="center"><sub>Review emergency changes and disputes</sub></td>
+</tr>
+</table>
+
+- See every interviewer's calendar and availability.
+- Correct skill records and reopen booking early, with the reason in the audit trail.
+- **Nullify a badge** for malpractice in one step. Appeals can reinstate it.
+
+## How it works
+
+### The student journey
+
+Every student has one journey per badge. A single state machine is the only code allowed to change its status, and every change is written to an audit trail.
+
+<img src="docs/images/journey.png" alt="Student journey flowchart" width="100%">
+
+Each student gets **3 attempts** per badge. A retake, or anything that wasn't the student's fault (interviewer absent, interviewer cancelled, nobody started it), doesn't count.
+
+### Interview day
+
+| Time | What unlocks |
+|---|---|
+| 30 min before | Booking closes (the interviewer can open a slot at short notice) |
+| 10 min before | The interviewer can start the interview |
+| Start | The result can be recorded |
+| +15 min | No-show (interviewer) and "my interviewer hasn't joined" (student) |
+| +45 min | If nobody started it, it's marked **missed**, with no attempt used |
+
+### Edge cases
+
+| Situation | What happens |
+|---|---|
+| Two students pick the same slot | Row locks and a unique index let only one win; the other is asked to pick again |
+| A student has a last-minute emergency | The change happens at once; the team approves it (free) or rejects it (counts as an attempt) |
+| The interviewer can't make it | Reschedule or cancel with a reason; the student keeps their attempt and is booked first |
+| A student is marked absent unfairly | They dispute within 48 hours; the team sees both sides before deciding |
+| Cheating is found after a pass | The badge is revoked and the student sees the reason |
+
+The full reasoning is in the **[design write-up](docs/WRITEUP.md)**: states, edge cases, data model and the three key student messages.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A["Web app<br/>React · TypeScript"] -->|REST + JWT| B["API<br/>FastAPI · Python"]
+    B -->|SQLAlchemy| C[("PostgreSQL 16")]
+    D["Background job<br/>every minute"] --> C
+    B --- D
+```
+
+- **Every rule lives in the API.** The screens ask the API which actions are allowed and when blocked ones open, so the UI never re-implements a rule.
+- **No double bookings.** Booking locks the journey, slot and interview rows. Partial unique indexes are a second guard, tested with five students racing for one slot.
+- **Runs on its own.** A background job sends reminders and marks missed interviews. It locks rows with `SKIP LOCKED`, so several API workers can run it safely.
+
+### Data model
+
+<img src="docs/images/schema.png" alt="Database schema" width="100%">
+
+Start with `interview_journeys`: one row per student per badge, holding their current state, attempts and wait dates.
+
+## Quick start
+
+The only requirement is **[Docker Desktop](https://www.docker.com/products/docker-desktop/)**. Python, Node and Postgres all run in containers.
+
+```bash
+git clone git@github.com:aryanjain1908/Interview-Scheduler.git
+cd Interview-Scheduler
+```
+
+| Windows | macOS / Linux |
+|---|---|
+| Double-click `start.bat`, or run `.\start.ps1` | `./start.sh` |
 
 The script:
-- starts Docker Desktop if it isn't running;
-- builds the images on the first run;
-- starts the database, API and web app;
-- waits until they respond, then opens http://localhost:5173.
+1. starts Docker Desktop if it isn't running;
+2. builds the images on the first run;
+3. starts the database, API and web app;
+4. waits until they're ready, then opens **http://localhost:5173**.
 
-On first start the API runs the database migrations and loads demo data.
-
-| Windows | macOS / Linux | What it does |
-|---|---|---|
-| `.\start.ps1` | `./start.sh` | Start (builds images only if missing) |
-| `.\start.ps1 -Rebuild` | `./start.sh --rebuild` | Rebuild images first, e.g. after changing dependencies |
-| `.\start.ps1 -Reset` | `./start.sh --reset` | Start, then wipe and reload the demo data |
-| `.\start.ps1 -Test` | `./start.sh --test` | Start, then run the backend test suite |
-| `.\start.ps1 -Logs` | `./start.sh --logs` | Follow the logs of all services |
-| `.\start.ps1 -Stop` | `./start.sh --stop` | Stop everything; data is kept |
-| `.\start.ps1 -Stop -Wipe` | `./start.sh --stop --wipe` | Stop and delete the database |
+| Option (Windows / macOS · Linux) | What it does |
+|---|---|
+| `-Rebuild` / `--rebuild` | Rebuild images, e.g. after changing dependencies |
+| `-Reset` / `--reset` | Wipe and reload the demo data |
+| `-Test` / `--test` | Run the backend test suite |
+| `-Logs` / `--logs` | Follow the logs of all services |
+| `-Stop` / `--stop` | Stop everything; add `-Wipe` / `--wipe` to delete the database |
 
 | Service | URL |
 |---|---|
 | Web app | http://localhost:5173 |
-| API + Swagger docs | http://localhost:8000/docs |
-| Postgres | localhost:5432 (grit / grit) |
+| API docs (Swagger) | http://localhost:8000/docs |
+| Postgres | `localhost:5432` (user and password `grit`) |
 
-Ports 5173, 8000 and 5432 must be free. The scripts build images with plain `docker build`, because `docker compose build` fails on some Windows setups.
+### Demo accounts
 
-### Logs
-
-The API logs with [loguru](https://github.com/Delgan/loguru). View them with `.\start.ps1 -Logs` or `./start.sh --logs`.
-
-- **Requests:** every request gets one line with its status and duration, plus a request ID. The same ID is returned in the `X-Request-ID` response header.
-- **Warnings:** refused actions (such as a slot already taken) and failed logins are logged as warnings.
-- **Business events:** bookings, results, no-shows, emergency changes and reviews are logged with record IDs only. No names, emails or passwords are logged.
-- **Settings:** `LOG_LEVEL` sets the level (default `INFO`; `DEBUG` also shows every state change), and `LOG_JSON=true` switches to JSON lines.
-
-### Without Docker for the app (Postgres still in Docker)
-
-```bash
-docker compose up -d db
-cd backend && pip install -r requirements.txt && alembic upgrade head && python -m app.seed && uvicorn app.main:app --reload
-cd frontend && npm install && npm run dev
-```
-
-## Demo accounts (password `demo1234`)
+Every account uses the password **`demo1234`**. You can also sign up with any role.
 
 | Account | What you'll see |
 |---|---|
-| `sneha@grit.demo` | Eligible, not booked → book a slot |
-| `rohan@grit.demo` | Booked for tomorrow → reschedule / cancel |
-| `vikram@grit.demo` | Just passed (confetti, badge on profile) |
-| `sai@grit.demo` | Retake suggested, with date |
-| `neha@grit.demo` | Failed, cooling down (attempt 2 of 3 later) |
-| `farhan@grit.demo` | No-show the student disputed — waiting in *Interviews → Disputed* |
-| `ishita@grit.demo` | Emergency change inside 12h — waiting in *Interviews → Emergency changes* |
-| `aditya@grit.demo` | Interviewer moved the interview with a reason; the student can change it for free |
+| `sneha@grit.demo` | Eligible student, ready to book |
+| `rohan@grit.demo` | Booked for tomorrow; can reschedule or cancel |
+| `vikram@grit.demo` | Just passed, with the badge on the profile |
+| `ishita@grit.demo` | Emergency change waiting for the team |
+| `farhan@grit.demo` | Disputed no-show waiting for the team |
+| `aditya@grit.demo` | Interviewer moved the interview; free to change it |
 | `tanvi@grit.demo` | Badge revoked for malpractice |
-| `kiran@grit.demo` | Interviewer cancelled → priority rebook |
-| `arjun@grit.demo` | Skills still pending |
-| `priya@grit.demo` | Interviewer (all tracks) with interviews today |
-| `rahul@grit.demo` / `meera@grit.demo` | Interviewers for Backend+Frontend / Data Analyst+Backend |
+| `priya@grit.demo` | Interviewer with interviews today |
 | `admin@grit.demo` | Interview team |
 
-You can also **sign up with any role**. A new student starts with skills pending, exactly like a real student. To make them eligible, log in as the interview team, open **Student records**, find the student and record their skill clears. That's the same tool the team uses when the contest sync misses a clear. **Allow rebooking now** (on a student in cooldown) reopens booking early, with a reason saved to the audit trail.
+> **Try a result right away:** Aisha's interview on Priya's schedule is live when the data is seeded. Record a pass, then log in as `aisha@grit.demo` to see it.
 
-**Changing a booking.** Students reschedule (max 2) or cancel freely until 12 hours before. Inside 12 hours they get **Emergency change**: pick a new time or cancel, with a reason. It happens at once and the team approves it (no attempt used) or rejects it (counts as an attempt) from *Interviews → Emergency changes*. Interviewers use **Change → Reschedule / Cancel interview** on their schedule, always with a reason; the student and the team leads are notified, and after an interviewer move the student can change it for free.
+## Demo videos
 
-**Interview-day rules.** Students can book slots starting 30+ minutes from now. On the day: *Mark as started* opens 10 min before the slot, *Record outcome* at the start, and *No-show* (interviewer, with a note) and *My interviewer hasn't joined* (student) 15 min after the start. Buttons that aren't open yet show when they open. An interview nobody started is marked **Missed** 15 min after its slot (no attempt used). A student marked as a no-show can **dispute** it within 48h, and the team excuses or rejects it from *Interviews → Disputed*. A background job (every minute, inside the API) also sends reminders 24h and 1h before. Seeded examples: `nikhil@grit.demo` (interviewer absent), `pooja@grit.demo` (missed), `farhan@grit.demo` (disputed no-show).
+Four narrated videos, recorded in the real app, play on the home page:
 
-Because outcomes can't be recorded before an interview starts, use **Aisha's** interview (on Priya's schedule, happening when you seed) to try recording a result straight away. It's marked missed 15 min after its slot if nobody acts; run `docker compose exec backend python -m app.seed --reset` for a fresh one.
+| Video | Length |
+|---|---|
+| [Product tour](frontend/public/videos/overview.mp4) | 1:03 |
+| [For students](frontend/public/videos/student.mp4) | 0:59 |
+| [For interviewers](frontend/public/videos/interviewer.mp4) | 0:53 |
+| [For the interview team](frontend/public/videos/team.mp4) | 0:43 |
 
-### 2-minute walkthrough
-
-1. Log in as **Sneha**, book a Frontend slot, and see "You're booked!" on the home page.
-2. Log in as **Priya**. A booked interview shows *Record outcome* locked until it starts (Sneha's will look like that on her interviewer's schedule). **Aisha's** interview is happening now: click **Record outcome** on it and choose **Pass**.
-3. Log in as **Aisha** (`aisha@grit.demo`): the home card shows the pass with confetti, and **My badges** shows the badge.
-4. Log in as **admin**. Open **Calendar** and **Interviewers** to see everyone's availability, then **Booking status** to see the *Booked / Not booked* split and send reminders. Then open **Student records**, find Aisha and click **Nullify badge** (or use **Malpractice** to raise a flag and uphold it later): the badge is revoked.
+The tooling that records and voices them is in [`tools/video`](tools/video/README.md).
 
 ## Tests
 
 ```bash
-docker compose exec backend pytest
+./start.sh --test        # or .\start.ps1 -Test on Windows
 ```
 
-There are 152 tests against a real Postgres test database. They cover:
-- every allowed and disallowed state transition
-- eligibility and cooldowns
-- booking rules and the 12-hour cutoff
-- a 5-way concurrent booking race (exactly one wins)
-- outcomes, no-shows and revocation/appeal
-- availability slot generation
-- interview-day timing rules, missed interviews (student absent, interviewer absent, both absent), no-show disputes and reminders
-- student emergency changes (approve/reject, final attempt), interviewer reschedule/cancel, and racing changes
-- auth and role guards
+154 tests run against a real Postgres database. They cover:
+- every allowed and refused state transition, plus eligibility and cooldowns;
+- booking rules and concurrent booking races;
+- interview-day timing, attendance, disputes and reminders;
+- emergency changes, interviewer moves and cancels;
+- auth and role guards.
 
-To typecheck and build the frontend: `cd frontend && npm run build`.
+## Logging
 
-## Code map
+The API logs with **[loguru](https://github.com/Delgan/loguru)**:
+- **Requests:** each request logs one line with its status, duration and a request ID. The same ID is returned in the `X-Request-ID` header.
+- **Events:** bookings, results, no-shows and reviews are logged with record IDs only, never names, emails or passwords.
 
+Set `LOG_LEVEL=DEBUG` to see every state change, or `LOG_JSON=true` for JSON lines.
+
+## Project structure
+
+```text
+backend/
+  app/
+    services/   business rules: state machine, booking, interview-day rules, attendance, reviews
+    routers/    thin HTTP layer: validate, call a service, commit
+    models/     SQLAlchemy models
+    core/       settings, auth, time helpers, logging
+    seed.py     demo data covering every journey state
+  alembic/      database migrations
+  tests/        154 tests against real Postgres
+frontend/
+  src/
+    pages/      student, interviewer, team, sign-in and home page
+    features/   larger UI pieces, e.g. the student status card
+    components/ UI kit, layout and calendars
+    api/        typed API hooks per role
+docs/           design write-up and README images
+tools/video/    scripts that record and voice the demo videos
+start.*         one-command start scripts
 ```
-backend/app/
-  services/state_machine.py   the only writer of journey status (allow-list + audit event)
-  services/eligibility.py     skills → eligible, lazy cooldown expiry, "why can't I book?"
-  services/booking.py         book / reschedule / cancel with row locks
-  services/interviews.py      start, no-show, record outcome, award badge
-  services/availability.py    weekly windows → 14 days of slots, block slot / day off
-  services/admin.py           pipeline stats, eligible-students list, reminders, flags
-  services/messages.py        every student-facing message (single source of copy)
-  routers/                    thin HTTP layer: validate → call service → commit
-  seed.py                     demo data generated by running the real services
-frontend/src/
-  features/student/InterviewStatusCard.tsx   one card, a variant per journey state
-  features/student/StudentHomeView.tsx       shared by the real dashboard and /showcase
-  lib/status.ts                              every state's label and colour in one map
-  api/                                        typed TanStack Query hooks per role
-```
+
+---
+
+<div align="center">
+
+Designed and built by **[Aryan Jain](https://www.linkedin.com/in/aryan-jain-19082002/)**
+
+<sub>NIAT AI Product Engineer assignment</sub>
+
+</div>
