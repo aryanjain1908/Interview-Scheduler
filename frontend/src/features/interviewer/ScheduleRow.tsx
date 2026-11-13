@@ -55,9 +55,12 @@ export function ScheduleRow({ item, now, onStart, onNoShow, onRecord, onReport, 
         cancelled && "opacity-60",
       )}
     >
-      <div className="flex w-24 shrink-0 items-center gap-2 sm:flex-col sm:items-start sm:gap-0">
-        <p className="font-display text-lg font-extrabold text-ink-950">{formatTime(item.start_at)}</p>
-        <p className="text-xs text-ink-400">{formatTime(item.end_at)}</p>
+      <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 sm:w-24 sm:flex-col sm:flex-nowrap sm:items-start sm:gap-0">
+        <p className="whitespace-nowrap font-display text-lg font-extrabold text-ink-950">{formatTime(item.start_at)}</p>
+        <p className="whitespace-nowrap text-xs text-ink-400">
+          <span className="sm:hidden">to </span>
+          {formatTime(item.end_at)}
+        </p>
         {isNow && open && <Pill tone="emerald" dot>Now</Pill>}
       </div>
 
