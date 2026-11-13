@@ -1,0 +1,7 @@
+{
+  "name": "grit-videos",
+  "private": true,
+  "type": "module",
+  "description": "Records the narrated product videos shown on the landing page",
+  "dependencies": { "playwright-core": "1.47.2" }
+}

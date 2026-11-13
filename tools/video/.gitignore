@@ -1,0 +1,7 @@
+# generated while producing the videos
+vo/
+rec/
+*.timeline.json
+music.wav
+sheet-*.jpg
+node_modules/

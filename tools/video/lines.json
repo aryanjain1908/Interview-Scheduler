@@ -1,0 +1,34 @@
+{
+  "overview": {
+    "o1": "So, you've cleared every skill for a Track Badge. Now there's just one step left: a live interview. And honestly? It should be this easy.",
+    "o2": "The moment you're eligible, your dashboard tells you. Pick a day, pick a time... and you're booked.",
+    "o3": "From here, one card shows you everything. When it is, who you're meeting, and what you can still change.",
+    "o4": "Interviewers get a simple schedule for the day. And the buttons only unlock when it's actually time.",
+    "o5": "They record the result, with real feedback. Pass, and the badge is on your profile right away.",
+    "o6": "Meanwhile, the interview team can see who's booked, who hasn't, and nudge them in one click.",
+    "o7": "And when something goes wrong, like an emergency, a dispute, or even cheating, there's a clear and fair way to handle it.",
+    "o8": "GRIT Interviews. From eligible, to earned."
+  },
+  "student": {
+    "s1": "Let's see it as a student. Divya has cleared all her Data Analyst skills, so her dashboard is already asking her to book.",
+    "s2": "She picks a day, then a time that works for her. Anything starting in the next thirty minutes is hidden, so the interviewer always gets a heads-up.",
+    "s3": "Before she confirms, she can see who she's meeting, how to join, and the rules for changing it later.",
+    "s4": "And that's it, she's booked. She'll get a reminder a day before, and an hour before. Until twelve hours out, she can reschedule twice, or cancel, no questions asked.",
+    "s5": "But what if something comes up at the last minute? Ishita had a family emergency. So she moved her slot, and told the team why. If they approve it, it won't count against her.",
+    "s6": "Once the interview is done, the result shows up right here. Scores, feedback, and if she's passed, her badge."
+  },
+  "interviewer": {
+    "i1": "Now, the interviewer's side. Priya opens her schedule and sees today's interviews: who, which badge, and which attempt.",
+    "i2": "Nothing unlocks too early. She can start ten minutes before, record the result once it begins, and mark a no-show only after waiting fifteen minutes.",
+    "i3": "When it's over, she picks pass, retake later, or not cleared. She scores three skills, and writes feedback the student will actually read.",
+    "i4": "If her plans change, she can move the interview to another free slot, or cancel it. She just has to say why, and the student and the team are told.",
+    "i5": "Her availability is set once a week. And if a slot is too close for students to book, she can still open it up at short notice."
+  },
+  "team": {
+    "t1": "Finally, the interview team. One screen shows who's eligible, who's booked, and what's happening today.",
+    "t2": "Here's everyone who's ready but hasn't booked yet. Select them, send a reminder, done.",
+    "t3": "Last-minute emergency changes land here for review. Approve one, and no attempt is used. Reject it, and it counts.",
+    "t4": "If a student says they were marked absent unfairly, the team sees both sides of the story before deciding.",
+    "t5": "And if cheating comes to light after a pass, the badge can be taken back in one step, with the reason on record."
+  }
+}
