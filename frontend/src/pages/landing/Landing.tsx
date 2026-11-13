@@ -1,4 +1,4 @@
-import { ArrowRight, Check, FileText, PlayCircle, X } from "lucide-react";
+import { ArrowRight, Check, FileText, MonitorPlay, PlayCircle, X } from "lucide-react";
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
@@ -44,6 +44,9 @@ export default function Landing() {
             ))}
           </nav>
           <div className="flex items-center gap-2">
+            <Link to="/prototype" className={buttonClasses("secondary", "sm")} aria-label="View the clickable prototype">
+              <MonitorPlay className="h-4 w-4" /> <span className="hidden sm:inline">Prototype</span>
+            </Link>
             <Link to="/writeup" className={buttonClasses("secondary", "sm")} aria-label="Read the write-up">
               <FileText className="h-4 w-4" /> <span className="hidden sm:inline">Write-up</span>
             </Link>
@@ -79,6 +82,9 @@ export default function Landing() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to={appLink} className={buttonClasses("primary", "lg")}>
                 {user ? "Open the app" : "Try the live demo"} <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link to="/prototype" className={buttonClasses("dark", "lg")}>
+                <MonitorPlay className="h-4 w-4" /> View the prototype
               </Link>
               <a href="#videos" className={buttonClasses("secondary", "lg")}>
                 <PlayCircle className="h-4 w-4" /> Watch the 1-minute tour
