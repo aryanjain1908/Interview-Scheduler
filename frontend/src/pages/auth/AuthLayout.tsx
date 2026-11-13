@@ -1,11 +1,12 @@
-import { CalendarCheck2, ClipboardCheck, ShieldCheck } from "lucide-react";
+import { ArrowLeft, CalendarCheck2, ClipboardCheck, ShieldCheck } from "lucide-react";
 import { ReactNode } from "react";
+import { Link } from "react-router-dom";
 
-import { Logo } from "../../components/layout/AppShell";
+import { HomeLogo } from "../../components/layout/AppShell";
 
 const POINTS = [
   { icon: CalendarCheck2, title: "Book in seconds", body: "Eligible students pick a live slot right from their dashboard." },
-  { icon: ClipboardCheck, title: "Outcomes that land", body: "Interviewers record pass, fail or retake — students see it instantly." },
+  { icon: ClipboardCheck, title: "Outcomes that land", body: "Interviewers record pass, fail or retake, and students see it right away." },
   { icon: ShieldCheck, title: "Badges you can trust", body: "Malpractice found later? The badge is nullified, with a full audit trail." },
 ];
 
@@ -15,7 +16,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
       <aside className="relative hidden overflow-hidden bg-ink-950 p-12 text-white lg:flex lg:flex-col">
         <div className="absolute inset-0 opacity-50 [background:radial-gradient(700px_400px_at_0%_100%,#4338CA,transparent),radial-gradient(500px_300px_at_100%_0%,#1A2350,transparent)]" />
         <div className="relative">
-          <Logo />
+          <HomeLogo />
         </div>
         <div className="relative mt-auto max-w-lg">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-300">Track Badge interviews</p>
@@ -40,9 +41,17 @@ export function AuthLayout({ children }: { children: ReactNode }) {
       </aside>
       <main className="flex flex-col justify-center px-5 py-10 sm:px-12">
         <div className="mb-8 lg:hidden">
-          <Logo dark={false} />
+          <HomeLogo dark={false} />
         </div>
-        <div className="mx-auto w-full max-w-[400px]">{children}</div>
+        <div className="mx-auto w-full max-w-[400px]">
+          <Link
+            to="/"
+            className="mb-8 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 transition hover:text-ink-900"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to home
+          </Link>
+          {children}
+        </div>
       </main>
     </div>
   );

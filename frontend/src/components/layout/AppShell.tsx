@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CalendarRange,
   History,
+  House,
   LayoutDashboard,
   ListChecks,
   LogOut,
@@ -14,7 +15,7 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../auth/AuthContext";
 import type { Role } from "../../lib/types";
@@ -52,6 +53,20 @@ const NAV: Record<Role, NavItem[]> = {
 };
 
 const ROLE_LABEL: Record<Role, string> = { student: "Student", interviewer: "Interviewer", admin: "Interview team" };
+
+/** The logo as a link back to the product home page. */
+export function HomeLogo({ dark = true }: { dark?: boolean }) {
+  return (
+    <Link
+      to="/"
+      aria-label="GRIT Interviews home page"
+      title="Go to the home page"
+      className="-m-1 rounded-lg p-1 transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+    >
+      <Logo dark={dark} />
+    </Link>
+  );
+}
 
 export function Logo({ dark = true }: { dark?: boolean }) {
   return (
@@ -94,7 +109,7 @@ export function AppShell() {
     <div className="min-h-screen lg:pl-64">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col bg-ink-950 px-4 py-6 lg:flex">
         <div className="flex items-center justify-between px-2">
-          <Logo />
+          <HomeLogo />
           <NotificationBell dark placement="down" />
         </div>
         <nav className="mt-10 flex flex-1 flex-col gap-1 overflow-y-auto">
@@ -115,6 +130,13 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
+        <Link
+          to="/"
+          className="mb-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-ink-400 transition hover:bg-white/5 hover:text-white"
+        >
+          <House className="h-[18px] w-[18px]" />
+          Home page
+        </Link>
         <div className="rounded-xl bg-white/5 p-3">
           <div className="flex items-center gap-3">
             <Avatar name={user.name} />
@@ -133,7 +155,7 @@ export function AppShell() {
       </aside>
 
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-ink-200/70 bg-canvas/90 px-4 py-3 backdrop-blur lg:hidden">
-        <Logo dark={false} />
+        <HomeLogo dark={false} />
         <div className="flex items-center gap-2">
           <NotificationBell />
           <Avatar name={user.name} size="sm" />
