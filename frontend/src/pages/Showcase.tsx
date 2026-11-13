@@ -4,7 +4,7 @@ import { ReactNode, useMemo } from "react";
 import { Link } from "react-router-dom";
 
 import { HOME_FOR_ROLE, useAuth } from "../auth/AuthContext";
-import { Logo } from "../components/layout/AppShell";
+import { HomeLogo } from "../components/layout/AppShell";
 import { ScheduleRow } from "../features/interviewer/ScheduleRow";
 import { KEY_MESSAGES, showcaseData } from "../features/showcase/fixtures";
 import { ProfileView } from "../features/student/ProfileView";
@@ -23,7 +23,7 @@ export default function Showcase() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 border-b border-ink-200/70 bg-canvas/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1280px] items-center justify-between px-4 py-3 sm:px-6">
-          <Logo dark={false} />
+          <HomeLogo dark={false} />
           <Link
             to={user ? HOME_FOR_ROLE[user.role] : "/login"}
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-600 hover:text-ink-900"
