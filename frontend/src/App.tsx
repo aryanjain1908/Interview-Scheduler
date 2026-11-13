@@ -15,6 +15,7 @@ import InterviewerCalendar from "./pages/interviewer/Calendar";
 import InterviewerHistory from "./pages/interviewer/History";
 import InterviewerSchedule from "./pages/interviewer/Schedule";
 import Landing from "./pages/landing/Landing";
+import Prototype from "./pages/prototype/Prototype";
 import Showcase from "./pages/Showcase";
 import Writeup from "./pages/Writeup";
 import BookingStatus from "./pages/team/BookingStatus";
@@ -30,6 +31,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/showcase" element={<Showcase />} />
+      <Route path="/prototype" element={<Prototype />} />
       <Route path="/writeup" element={<Writeup />} />
 
       <Route element={<RequireRole role="student" />}>
