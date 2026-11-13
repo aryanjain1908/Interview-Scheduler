@@ -30,6 +30,7 @@ from app.models import (
 )
 from app.services import interview_rules as rules
 from app.services import messages
+from app.services.change_settle import settle_pending
 from app.services.eligibility import booking_block_reason, get_or_create_journey
 from app.services.locks import lock_interview, lock_journey
 from app.services.notifications import notify, notify_team_leads
@@ -96,6 +97,7 @@ def reschedule(db: Session, *, student: User, interview_id: uuid.UUID, new_slot_
     free = interview.moved_by_interviewer_at is not None
 
     new_slot = lock_open_slot(db, new_slot_id, interview.badge_id, now)
+    ensure_new_time(interview, new_slot)
     old_start = interview.slot.start_at
     move_interview(interview, new_slot, release_old=SlotStatus.OPEN)
     if not free:
@@ -150,6 +152,7 @@ def cancel_by_interviewer(
     journey.priority_rebook = True
     journey.reschedules_used = 0
     transition(journey, S.ELIGIBLE, at=now, actor_id=actor_id, reason=f"Interviewer cancelled: {reason}"[:300])
+    settle_pending(db, journey, why="your interviewer cancelled the interview", now=now)
     notify(
         db, interview.student_id, messages.cancelled_by_interviewer(interview.badge.name, interview.start_at, reason), at=now
     )
@@ -171,6 +174,15 @@ def bookable_in_time(slot: Slot, now: datetime) -> bool:
 def can_change(interview: Interview, now: datetime) -> bool:
     """Whether the student can reschedule or cancel without an emergency request."""
     return rules.can_cancel(interview, now).allowed
+
+
+def ensure_new_time(interview: Interview, new_slot: Slot) -> None:
+    """A change must move the interview to a different time; the same time with
+    another interviewer would use up a change and fix nothing."""
+    if new_slot.start_at == interview.start_at:
+        raise RuleViolation(
+            f"Your interview is already at {fmt_datetime(new_slot.start_at)}. Pick a different time.", code="same_time"
+        )
 
 
 def move_interview(interview: Interview, new_slot: Slot, *, release_old: SlotStatus) -> None:

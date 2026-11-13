@@ -44,22 +44,30 @@ export default function StudentBook() {
   const today = istDateKey(new Date());
   const days = useMemo(() => Array.from({ length: HORIZON_DAYS }, (_, i) => addDaysToKey(today, i)), [today]);
 
+  // When changing a booking, its current time is shown but can't be picked again
+  // (another interviewer at the same time would use up a change and fix nothing).
+  const changing = item?.current_interview;
+  const currentStart =
+    changing && (changing.id === rescheduleId || changing.id === emergencyId) ? changing.start_at : null;
+  const currentMs = currentStart ? Date.parse(currentStart) : null;
+
   // One chip per start time; several interviewers at the same time collapse into one choice.
   const byDay = useMemo(() => {
     const map = new Map<string, Map<string, Slot[]>>();
     for (const slot of slots.data ?? []) {
+      if (Date.parse(slot.start_at) === currentMs) continue;
       const day = istDateKey(slot.start_at);
       const times = map.get(day) ?? new Map<string, Slot[]>();
       times.set(slot.start_at, [...(times.get(slot.start_at) ?? []), slot]);
       map.set(day, times);
     }
     return map;
-  }, [slots.data]);
+  }, [slots.data, currentMs]);
 
   const dayCounts = useMemo(() => new Map([...byDay.entries()].map(([d, times]) => [d, times.size])), [byDay]);
   const firstDayWithSlots = days.find((d) => byDay.has(d)) ?? today;
   const [pickedDay, setPickedDay] = useState<string | null>(null);
-  const day = pickedDay ?? firstDayWithSlots;
+  const day = pickedDay ?? (currentStart ? istDateKey(currentStart) : firstDayWithSlots);
   const [selected, setSelected] = useState<Slot | null>(null);
 
   if (dashboard.isLoading) return <Skeleton className="h-96" />;
@@ -89,7 +97,11 @@ export default function StudentBook() {
     );
   }
 
-  const times = [...(byDay.get(day)?.entries() ?? [])];
+  const times: [string, Slot[]][] = [...(byDay.get(day)?.entries() ?? [])];
+  if (currentStart && istDateKey(currentStart) === day) {
+    times.push([currentStart, []]);
+    times.sort(([a], [b]) => Date.parse(a) - Date.parse(b));
+  }
   const mutation = isReschedule ? reschedule : book;
 
   const submitEmergency = (reason: string, slot: Slot | null) => {
@@ -208,6 +220,17 @@ export default function StudentBook() {
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 xl:grid-cols-5">
                       {group.map(([start, options]) => {
                         const active = selected?.start_at === start;
+                        if (!options.length)
+                          return (
+                            <div
+                              key={start}
+                              title="This is your interview's current time. Pick a different one."
+                              className="rounded-lg border border-dashed border-sky-300 bg-sky-50 px-2 py-1.5 text-center text-sm font-semibold text-sky-800"
+                            >
+                              {formatTime(start)}
+                              <span className="block text-[11px] font-medium leading-tight text-sky-700">Current time</span>
+                            </div>
+                          );
                         return (
                           <button
                             key={start}
@@ -242,6 +265,7 @@ export default function StudentBook() {
           <div className="min-w-0">
             <p className="text-xs text-ink-400">Selected</p>
             <p className="font-semibold leading-snug">{selected && formatDateTime(selected.start_at)}</p>
+            {selected && <p className="truncate text-xs text-ink-300">with {selected.interviewer.name}</p>}
           </div>
           {isEmergency ? (
             <Button onClick={() => setEmergencyOpen("slot")} disabled={!selected} icon={<CalendarCheck2 className="h-4 w-4" />}>
