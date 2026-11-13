@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { HOME_FOR_ROLE, useAuth } from "../../auth/AuthContext";
 import { Logo } from "../../components/layout/AppShell";
 import { buttonClasses } from "../../components/ui/Button";
+import { AUTHOR_URL, GitHubIcon, LinkedInIcon, REPO_URL } from "./BrandIcons";
 import { DayTimeline } from "./DayTimeline";
 import { HowItsBuilt } from "./HowItsBuilt";
 import { JourneyFlow } from "./JourneyFlow";
@@ -42,9 +43,20 @@ export default function Landing() {
               </a>
             ))}
           </nav>
-          <Link to={appLink} className={buttonClasses("dark", "sm")}>
-            {user ? "Open the app" : "Log in"} <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <a
+              href={REPO_URL}
+              target="_blank"
+              rel="noreferrer"
+              className={buttonClasses("secondary", "sm")}
+              aria-label="View the source code on GitHub"
+            >
+              <GitHubIcon /> <span className="hidden sm:inline">GitHub</span>
+            </a>
+            <Link to={appLink} className={buttonClasses("dark", "sm")}>
+              {user ? "Open the app" : "Log in"} <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -274,6 +286,14 @@ export default function Landing() {
               <Link to="/showcase" className={buttonClasses("secondary", "lg")}>
                 See before and after screens
               </Link>
+              <a
+                href={REPO_URL}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonClasses("dark", "lg") + " ring-1 ring-white/20"}
+              >
+                <GitHubIcon /> View the code
+              </a>
             </div>
           </div>
           <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -285,9 +305,30 @@ export default function Landing() {
             ))}
           </ul>
         </div>
-        <p className="mx-auto mt-16 max-w-[1360px] border-t border-white/10 px-4 pt-8 text-center text-[13px] text-ink-500 sm:px-6">
-          GRIT Interviews · NIAT AI Product Engineer assignment
-        </p>
+        <div className="mx-auto mt-16 flex max-w-[1360px] flex-col items-center justify-between gap-4 border-t border-white/10 px-4 pt-8 text-[14px] text-ink-400 sm:flex-row sm:px-6">
+          <p>
+            Designed and built by{" "}
+            <a
+              href={AUTHOR_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 font-semibold text-white underline-offset-4 hover:underline"
+            >
+              <LinkedInIcon className="h-4 w-4 text-[#0A66C2]" /> Aryan Jain
+            </a>
+          </p>
+          <div className="flex items-center gap-5">
+            <a
+              href={REPO_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-white"
+            >
+              <GitHubIcon /> Source on GitHub
+            </a>
+            <span className="text-ink-600">NIAT AI Product Engineer assignment</span>
+          </div>
+        </div>
       </section>
     </div>
   );
